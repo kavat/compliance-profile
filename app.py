@@ -24,7 +24,8 @@ def run_profile():
     username = request.json["username"]
     password = request.json["password"]
     profile = request.json["profile"]
-    return get_inspec_analysis(id_generator, username, password, host, profile)
+    os = request.json["os"]
+    return get_inspec_analysis(id_generator, username, password, host, profile, os)
   except Exception as e:
     print("Errore per {}: {}".format(host, str(e)))
     return { "status": False, "message": str(e) } 

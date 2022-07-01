@@ -8,9 +8,9 @@ import json
 from git import Repo
 from pathlib import Path
 
-def get_inspec_analysis(thread_id, username, password, host, profile):
+def get_inspec_analysis(thread_id, username, password, host, profile, os):
   try:
-    if username == "" or password == "" or host == "" or profile == "":
+    if username == "" or password == "" or host == "" or profile == "" or os == "":
       print("Thread {} - Parameters missed".format(thread_id))
       return { "status": False, "message" : "Parameters missed" }
     
@@ -22,15 +22,22 @@ def get_inspec_analysis(thread_id, username, password, host, profile):
 
     print("Thread {} - Clone of {}".format(thread_id, profile))
     Repo.clone_from("https://github.com/{}".format(profile), profile_dir)
-  
-    profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --user {} --password {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, username, password)
+ 
+    if os == "windows": 
+      profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . --backend winrm --user {} --password {} --host {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, password, host)
+    if os == "linux": 
+      profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --user {} --password {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, username, password)
 
+    if profile_cmd == "":
+      return { "status": False, "message": "Unknown OS" }
+      
     print("Thread {} - Execute {}".format(thread_id, profile_cmd))
     profile_output = os.popen(profile_cmd)
     print("Thread {} - OUTPUT COMMAND: {}".format(thread_id, profile_output))
     return prepare_json(json.load(profile_output))
   except Exception as e:
     print("Thread {} - Main error: {}".format(thread_id, str(e)))
+    return { "status": False, "message": str(e) }
     
 def pulisci(stringa):
   return stringa.replace("'"," ").replace('"'," ")
