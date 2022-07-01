@@ -8,9 +8,9 @@ import json
 from git import Repo
 from pathlib import Path
 
-def get_inspec_analysis(thread_id, username, password, host, profile, os):
+def get_inspec_analysis(thread_id, username, password, host, profile, os_host):
   try:
-    if username == "" or password == "" or host == "" or profile == "" or os == "":
+    if username == "" or password == "" or host == "" or profile == "" or os_host == "":
       print("Thread {} - Parameters missed".format(thread_id))
       return { "status": False, "message" : "Parameters missed" }
     
@@ -23,9 +23,9 @@ def get_inspec_analysis(thread_id, username, password, host, profile, os):
     print("Thread {} - Clone of {}".format(thread_id, profile))
     Repo.clone_from("https://github.com/{}".format(profile), profile_dir)
  
-    if os == "windows": 
+    if os_host == "windows": 
       profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . --backend winrm --user {} --password {} --host {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, password, host)
-    if os == "linux": 
+    if os_host == "linux": 
       profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --user {} --password {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, username, password)
 
     if profile_cmd == "":
