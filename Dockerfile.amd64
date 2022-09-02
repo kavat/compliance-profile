@@ -30,7 +30,6 @@ RUN yum install -y kubectl-1.20.0-0.x86_64
 
 RUN pip3 install --user -r requirements.txt
 RUN chmod +x start.sh
-RUN chmod 400 /root/.kube/config
 
 ENTRYPOINT ["/opt/start.sh"]
 

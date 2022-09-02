@@ -4,6 +4,8 @@ import config
 import os
 import shutil
 import json
+import traceback
+import base64
 
 from git import Repo
 from pathlib import Path
@@ -12,13 +14,22 @@ def get_inspec_analysis(thread_id, request_data):
   try:
     profile = request_data['profile']
     os_host = request_data['os']
-    username = request_data['username']
-    password = request_data['password']
-    host = request_data['host']
-    namespace = request_data['namespace']
-    pod = request_data['pod']
-    container = request_data['container']
-    kubeconfig_file = request_data['kubeconfig_file']
+    if os_host != "kubernetes":
+      username = request_data['username']
+      password = request_data['password']
+      host = request_data['host']
+    else:
+      namespace = request_data['namespace']
+      pod = request_data['pod']
+      container = request_data['container']
+      kubeconfig_file_b64 = request_data['kubeconfig_file']
+      base64_bytes = kubeconfig_file_b64.encode('ascii')
+      message_bytes = base64.b64decode(base64_bytes)
+      kubeconfig_file = message_bytes.decode('ascii')
+      f = open(config.KUBE_CONFIG_PATH, "w")
+      f.write(kubeconfig_file)
+      f.close()
+
     if profile == "" or os_host == "" or (os_host != "kubernetes" and (username == "" or password == "" or host == "")) or (os_host == "kubernetes" and (namespace == "" or pod == "" or container == "" or kubeconfig_file == "")):
       print("Thread {} - Parameters missed".format(thread_id))
       return { "status": False, "message" : "Parameters missed" }
@@ -37,7 +48,7 @@ def get_inspec_analysis(thread_id, request_data):
     if os_host == "linux": 
       profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --user {} --password {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, username, password)
     if os_host == "kubernetes":
-      profile_cmd = "export KUBECONFIG={} && export namespace={} && export pod={} && export container={} && cd /opt/profiles-inspec/{} && inspec exec . -t kubernetes:// --chef-license=accept-silent --reporter json:-".format(kubeconfig_file, namespace, pod, container, profile_name)
+      profile_cmd = "export KUBECONFIG={} && export namespace={} && export pod={} && export container={} && cd /opt/profiles-inspec/{} && inspec exec . -t kubernetes:// --chef-license=accept-silent --reporter json:-".format(config.KUBE_CONFIG_PATH, namespace, pod, container, profile_name)
 
     if profile_cmd == "":
       return { "status": False, "message": "Unknown OS" }
@@ -47,7 +58,7 @@ def get_inspec_analysis(thread_id, request_data):
     print("Thread {} - OUTPUT COMMAND: {}".format(thread_id, profile_output))
     return prepare_json(json.load(profile_output))
   except Exception as e:
-    print("Thread {} - Main error: {}".format(thread_id, str(e)))
+    print("Thread {} - Main error: {}: {}".format(thread_id, str(e), str(traceback.format_exc())))
     return { "status": False, "message": str(e) }
     
 def pulisci(stringa):
