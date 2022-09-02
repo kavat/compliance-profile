@@ -15,7 +15,6 @@ WORKDIR /opt
 
 RUN mkdir profiles-inspec logs /root/.kube
 
-COPY kube/kubernetes.repo /etc/yum.repos.d/kubernetes.repo
 COPY kube/kubernetes.rb /opt/inspec/embedded/lib/ruby/gems/2.7.0/gems/train-core-3.10.1/lib/train/transports/kubernetes.rb
 COPY launch_inspec.sh launch_inspect.sh
 COPY requests.sh post_requests.sh
@@ -25,11 +24,13 @@ COPY config.py config.py
 COPY start.sh start.sh
 COPY requirements.txt requirements.txt
 
-RUN yum install -y kubectl-1.20.0-0.x86_64
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.20.0/bin/linux/amd64/kubectl && \
+    chmod +x ./kubectl && \
+    mv ./kubectl /usr/local/bin/kubectl && \
+    kubectl version --help
 
 RUN pip3 install --user -r requirements.txt
 RUN chmod +x start.sh
-RUN chmod 400 /root/.kube/config
 
 ENTRYPOINT ["/opt/start.sh"]
 
