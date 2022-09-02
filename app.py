@@ -19,12 +19,7 @@ def hello_world():
 @app.route('/run_profile', methods=["POST"])
 def run_profile():
   try:
-    host = request.json["host"]
-    username = request.json["username"]
-    password = request.json["password"]
-    profile = request.json["profile"]
-    os = request.json["os"]
-    return get_inspec_analysis(id_generator, username, password, host, profile, os)
+    return get_inspec_analysis(id_generator, request.json)
   except Exception as e:
     print("Errore per {}: {}".format(host, str(e)))
     return { "status": False, "message": str(e) } 
