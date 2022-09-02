@@ -13,8 +13,11 @@ RUN curl https://omnitruck.chef.io/install.sh | bash -s -- -P inspec
 
 WORKDIR /opt
 
-RUN mkdir profiles-inspec
+RUN mkdir profiles-inspec logs /root/.kube
 
+COPY kube/config /root/.kube/config
+COPY kube/kubernetes.repo /etc/yum.repos.d/kubernetes.repo
+COPY kube/kubernetes.rb /opt/inspec/embedded/lib/ruby/gems/2.7.0/gems/train-core-3.10.1/lib/train/transports/kubernetes.rb
 COPY launch_inspec.sh launch_inspect.sh
 COPY requests.sh post_requests.sh
 COPY app.py app.py
@@ -23,9 +26,11 @@ COPY config.py config.py
 COPY start.sh start.sh
 COPY requirements.txt requirements.txt
 
+RUN yum install -y kubectl-1.20.0-0.x86_64
+
 RUN pip3 install --user -r requirements.txt
 RUN chmod +x start.sh
-RUN mkdir ./logs
+RUN chmod 400 /root/.kube/config
 
 ENTRYPOINT ["/opt/start.sh"]
 
