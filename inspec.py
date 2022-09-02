@@ -8,9 +8,18 @@ import json
 from git import Repo
 from pathlib import Path
 
-def get_inspec_analysis(thread_id, username, password, host, profile, os_host):
+def get_inspec_analysis(thread_id, request_data):
   try:
-    if username == "" or password == "" or host == "" or profile == "" or os_host == "":
+    profile = request_data['profile']
+    os_host = request_data['os']
+    username = request_data['username']
+    password = request_data['password']
+    host = request_data['host']
+    namespace = request_data['namespace']
+    pod = request_data['pod']
+    container = request_data['container']
+    kubeconfig_file = request_data['kubeconfig_file']
+    if profile == "" or os_host == "" or (os_host != "kubernetes" and (username == "" or password == "" or host == "")) or (os_host == "kubernetes" and (namespace == "" or pod == "" or container == "" or kubeconfig_file == "")):
       print("Thread {} - Parameters missed".format(thread_id))
       return { "status": False, "message" : "Parameters missed" }
     
@@ -27,6 +36,8 @@ def get_inspec_analysis(thread_id, username, password, host, profile, os_host):
       profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . --backend winrm --user {} --password {} --host {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, password, host)
     if os_host == "linux": 
       profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --user {} --password {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, username, password)
+    if os_host == "kubernetes":
+      profile_cmd = "export KUBECONFIG={} && export namespace={} && export pod={} && export container={} && cd /opt/profiles-inspec/{} && inspec exec . -t kubernetes:// --chef-license=accept-silent --reporter json:-".format(kubeconfig_file, namespace, pod, container, profile_name)
 
     if profile_cmd == "":
       return { "status": False, "message": "Unknown OS" }
