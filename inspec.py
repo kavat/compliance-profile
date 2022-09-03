@@ -22,15 +22,17 @@ def get_inspec_analysis(thread_id, request_data):
       namespace = request_data['namespace']
       pod = request_data['pod']
       container = request_data['container']
+      kubeconfig_name = request_data['kubeconfig_name']
       kubeconfig_file_b64 = request_data['kubeconfig_file']
       base64_bytes = kubeconfig_file_b64.encode('ascii')
       message_bytes = base64.b64decode(base64_bytes)
       kubeconfig_file = message_bytes.decode('ascii')
-      f = open(config.KUBE_CONFIG_PATH, "w")
+      kc_name = "{}/{}".format(config.KUBE_CONFIG_PATH, kubeconfig_name)
+      f = open(kc_name, "w")
       f.write(kubeconfig_file)
       f.close()
 
-    if profile == "" or os_host == "" or (os_host != "kubernetes" and (username == "" or password == "" or host == "")) or (os_host == "kubernetes" and (namespace == "" or pod == "" or container == "" or kubeconfig_file == "")):
+    if profile == "" or os_host == "" or (os_host != "kubernetes" and (username == "" or password == "" or host == "")) or (os_host == "kubernetes" and (namespace == "" or pod == "" or container == "" or kubeconfig_file == "" or kubeconfig_name == "")):
       print("Thread {} - Parameters missed".format(thread_id))
       return { "status": False, "message" : "Parameters missed" }
     
@@ -48,7 +50,7 @@ def get_inspec_analysis(thread_id, request_data):
     if os_host == "linux": 
       profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --user {} --password {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, username, password)
     if os_host == "kubernetes":
-      profile_cmd = "export KUBECONFIG={} && export namespace={} && export pod={} && export container={} && cd /opt/profiles-inspec/{} && inspec exec . -t kubernetes:// --chef-license=accept-silent --reporter json:-".format(config.KUBE_CONFIG_PATH, namespace, pod, container, profile_name)
+      profile_cmd = "export KUBECONFIG={} && export namespace={} && export pod={} && export container={} && cd /opt/profiles-inspec/{} && inspec exec . -t kubernetes:// --chef-license=accept-silent --reporter json:-".format(kc_name, namespace, pod, container, profile_name)
 
     if profile_cmd == "":
       return { "status": False, "message": "Unknown OS" }
