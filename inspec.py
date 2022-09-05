@@ -15,7 +15,7 @@ def get_inspec_analysis(thread_id, request_data):
     profile = request_data['profile']
     os_host = request_data['os']
     optionals = ""
-    if request_data['optionals'] != "":
+    if request_data['optionals'] != None and request_data['optionals'] != "" and request_data['optionals'] != "None":
       optionals = "--input {}".format(request_data['optionals'])
 
     if os_host != "kubernetes":
