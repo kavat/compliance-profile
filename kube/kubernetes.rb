@@ -60,7 +60,6 @@ module Train::Transports
       private
 
       def select_runner(options)
-        puts os.inspect
         if os.windows?
           # Force a 64 bit poweshell if needed
           if RUBY_PLATFORM == "i386-mingw32" && os.arch == "x86_64"

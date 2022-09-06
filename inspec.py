@@ -61,28 +61,33 @@ def get_inspec_analysis(thread_id, request_data):
       
     print("Thread {} - Execute {}".format(thread_id, profile_cmd))
     profile_output = os.popen(profile_cmd)
+    print("OUTPUT COMMAND STRING: {}".format(str(profile_output)))
     print("Thread {} - OUTPUT COMMAND: {}".format(thread_id, profile_output))
     return prepare_json(json.load(profile_output))
   except Exception as e:
     print("Thread {} - Main error: {}: {}".format(thread_id, str(e), str(traceback.format_exc())))
     return { "status": False, "message": str(e) }
     
-def pulisci(stringa):
-  return stringa.replace("'"," ").replace('"'," ")
+def pulisci(stringa, chiave):
+  print("Key {} = Valore {}".format(chiave, stringa)) 
+  if stringa != None:
+    return stringa.replace("'"," ").replace('"'," ")
+  else:
+    return ""
 
 def prepare_json(input_json):
   r = [] 
   i = 0
   try:
     for control in input_json['profiles'][0]['controls']:
-      control_id = pulisci(control["id"])
-      control_title = pulisci(control["title"])
-      control_desc = pulisci(control["desc"])
+      control_id = pulisci(control["id"], "id")
+      control_title = pulisci(control["title"], "title")
+      control_desc = pulisci(control["desc"], "desc")
       control_impact = control["impact"]
 
       for result in control["results"]:
-        result_status = pulisci(result["status"])
-        result_desc = pulisci(result["code_desc"])
+        result_status = pulisci(result["status"], "status")
+        result_desc = pulisci(result["code_desc"], "code_desc")
         if result_status == 'failed':
           color = 3
         else:
@@ -95,8 +100,8 @@ def prepare_json(input_json):
           "rule_sev": control_impact,
           "control_impact": control_impact,
           "control_desc": control_desc,
-          "result_status": pulisci(result_status),
-          "result_desc": pulisci(result_desc)
+          "result_status": result_status,
+          "result_desc":result_desc
         })
         i = i + 1
 
