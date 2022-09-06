@@ -99,6 +99,7 @@ module Train::Transports
         # If we don't have a runner, such as at the beginning of setting up the
         # transport and performing the first few steps of OS detection, fall
         # back to shelling out.
+        #puts "kubectl exec -n #{ENV['namespace']} #{ENV['pod']} -c #{ENV['container']} -- #{cmd}"
         res = Mixlib::ShellOut.new("kubectl exec -n #{ENV['namespace']} #{ENV['pod']} -c #{ENV['container']} -- #{cmd}")
         res.run_command
         Kubernetes::CommandResult.new(res.stdout, res.stderr, res.exitstatus)
@@ -106,12 +107,8 @@ module Train::Transports
         CommandResult.new("", "", 1)
       end
 
-      def file_via_connection(path)
-        if os.windows?
-          Train::File::Local::Windows.new(self, path)
-        else
-          Train::File::Local::Unix.new(self, path)
-        end
+      def file_via_connection(path, *args)
+        Train::File::Remote::Linux.new(self, path, *args)
       end
 
       class GenericRunner
@@ -126,7 +123,9 @@ module Train::Transports
             cmd = @cmd_wrapper.run(cmd)
           end
 
-          res = Mixlib::ShellOut.new(cmd)
+          #puts "kubectl exec -n #{ENV['namespace']} #{ENV['pod']} -c #{ENV['container']} -- #{cmd}"
+          res = Mixlib::ShellOut.new("kubectl exec -n #{ENV['namespace']} #{ENV['pod']} -c #{ENV['container']} -- #{cmd}")
+          #res = Mixlib::ShellOut.new(cmd)
           res.timeout = opts[:timeout]
           begin
             res.run_command
