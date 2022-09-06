@@ -18,6 +18,7 @@ RUN mkdir profiles-inspec logs /root/.kube
 COPY kube/config /root/.kube/config
 COPY kube/kubernetes.repo /etc/yum.repos.d/kubernetes.repo
 COPY kube/kubernetes.rb /opt/inspec/embedded/lib/ruby/gems/2.7.0/gems/train-core-3.10.1/lib/train/transports/kubernetes.rb
+COPY kube/input.rb /opt/inspec/embedded/lib/ruby/gems/2.7.0/gems/inspec-core-5.18.14/lib/inspec/input.rb
 COPY launch_inspec.sh launch_inspect.sh
 COPY requests.sh post_requests.sh
 COPY app.py app.py
