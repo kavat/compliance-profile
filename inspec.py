@@ -52,7 +52,10 @@ def get_inspec_analysis(thread_id, request_data):
     if os_host == "windows": 
       profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . --backend winrm --user {} --password {} --host {} --chef-license=accept-silent {} --reporter json:-".format(profile_name, username, password, host, optionals)
     if os_host == "linux": 
-      profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --user {} --password {} {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, username, password, optionals)
+      if username == "root":
+        profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --user {} --password {} {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, username, password, optionals)
+      else:
+        profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --sudo --sudo-password={} --user {} --password {} {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, password, username, password, optionals)
     if os_host == "kubernetes":
       profile_cmd = "export KUBECONFIG={} && export namespace={} && export pod={} && export container={} && cd /opt/profiles-inspec/{} && inspec exec . -t kubernetes:// {} --chef-license=accept-silent --reporter json:-".format(kc_name, namespace, pod, container, profile_name, optionals)
 
@@ -85,13 +88,24 @@ def prepare_json(input_json):
       control_desc = pulisci(control["desc"], "desc")
       control_impact = control["impact"]
 
+      result_statuses = {}
       for result in control["results"]:
         result_status = pulisci(result["status"], "status")
         result_desc = pulisci(result["code_desc"], "code_desc")
+        if result_desc not in result_statuses:
+          result_statuses[result_desc] = result_status
+        if result_desc in result_statuses and result_status != "passed":
+          result_statuses[result_desc] = result_status
+
+      for result_desc in result_statuses:
+        result_status = result_statuses[result_desc]
         if result_status == 'failed':
           color = 3
         else:
-          color = 1
+          if result_status == 'skipped':
+            color = 2
+          else:
+            color = 1
         r.append({
           "id": i,
           "color": color,
