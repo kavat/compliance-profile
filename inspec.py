@@ -50,12 +50,12 @@ def get_inspec_analysis(thread_id, request_data):
     Repo.clone_from("https://github.com/{}".format(profile), profile_dir)
  
     if os_host == "windows": 
-      profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . --backend winrm --user {} --password {} --host {} --chef-license=accept-silent {} --reporter json:-".format(profile_name, username, password, host, optionals)
+      profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . --backend winrm --user {} --password '{}' --host {} --chef-license=accept-silent {} --reporter json:-".format(profile_name, username, password, host, optionals)
     if os_host == "linux": 
       if username == "root":
-        profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --user {} --password {} {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, username, password, optionals)
+        profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --user {} --password '{}' {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, username, password, optionals)
       else:
-        profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --sudo --sudo-password={} --user {} --password {} {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, password, username, password, optionals)
+        profile_cmd = "cd /opt/profiles-inspec/{} && inspec exec . -t ssh://{}@{} --sudo --sudo-password='{}' --user {} --password '{}' {} --chef-license=accept-silent --reporter json:-".format(profile_name, username, host, password, username, password, optionals)
     if os_host == "kubernetes":
       profile_cmd = "export KUBECONFIG={} && export namespace={} && export pod={} && export container={} && cd /opt/profiles-inspec/{} && inspec exec . -t kubernetes:// {} --chef-license=accept-silent --reporter json:-".format(kc_name, namespace, pod, container, profile_name, optionals)
 
